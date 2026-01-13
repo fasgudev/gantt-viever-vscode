@@ -9,15 +9,26 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:gantt.previewFromCsv"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "ganttviewer.helloWorld",
-        "title": "Hello World"
+        "command": "ganttviewer.previewFromCsv",
+        "title": "Gantt: Preview from CSV"
       }
-    ]
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "ganttviewer.previewFromCsv",
+          "when": "resourceExtname == .csv",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
