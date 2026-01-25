@@ -4,6 +4,7 @@ export type CsvTask = {
   start: string;
   end: string;
   progress?: number;
+  assigned?: string;
   depends?: string[];
 };
 
@@ -24,6 +25,7 @@ export function parseTasksFromCsv(csv: string): CsvTask[] {
       start: cols[index("start")],
       end: cols[index("end")],
       progress: Number(cols[index("progress")] ?? 0),
+      assigned: cols[index("assigned")] ?? "",
       depends: (cols[index("depends")] ?? "").split("|").filter(Boolean)
     };
   }).filter(t => t.id && t.name);

@@ -15,10 +15,19 @@
     body { font-family: sans-serif; padding: 10px; }
     #gantt { height: 520px; border: 1px solid #ddd; border-radius: 8px; overflow: auto; }
     .muted { color: #666; }
+    .filters { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+    .filters label { font-weight: 500; }
+    .filters select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
   <h2>Gantt desde CSV</h2>
+  <div class="filters">
+    <label for="assignedFilter">Responsable:</label>
+    <select id="assignedFilter">
+      <option value="">Todos</option>
+    </select>
+  </div>
   <p class="muted" id="status"></p>
   <div id="gantt"></div>
 
@@ -26,17 +35,70 @@
   <script nonce="{{nonce}}">
     const vscode = acquireVsCodeApi();
     let gantt = null;
+    let allTasks = [];
 
-    function render(tasks) {
+    function updateassignedFilter(tasks) {
+      const select = document.querySelector("#assignedFilter");
+      const currentValue = select.value;
+      const assigneds = [...new Set(tasks.map(t => t.assigned).filter(Boolean))].sort();
+
+      select.innerHTML = '<option value="">Todos</option>';
+      assigneds.forEach(r => {
+        const option = document.createElement("option");
+        option.value = r;
+        option.textContent = r;
+        select.appendChild(option);
+      });
+
+      if (assigneds.includes(currentValue)) {
+        select.value = currentValue;
+      }
+    }
+
+    function getFilteredTasks() {
+      const filter = document.querySelector("#assignedFilter").value;
+      if (!filter) return allTasks;
+      return allTasks.filter(t => t.assigned === filter);
+    }
+
+    function renderGantt(tasks) {
       const el = document.querySelector("#gantt");
-      el.innerHTML = ""; // re-render limpio
+      el.innerHTML = "";
       if (!tasks || tasks.length === 0) {
         document.querySelector("#status").textContent = "No hay tareas válidas.";
         return;
       }
       document.querySelector("#status").textContent = "Actualizado: " + new Date().toLocaleTimeString();
-      gantt = new Gantt("#gantt", tasks, { view_mode: "Day" });
+      gantt = new Gantt("#gantt", tasks, {
+        view_mode: "Day",
+        infinite_padding: false,
+        popup: function({task}) {
+          console.log("task", task);
+          const assigned = task.assigned ? `<p><strong>Responsable:</strong> ${task.assigned}</p>` : '';
+          console.log("assigned", assigned);
+          return `
+          <div style="padding: 4px; color:#666;">
+            <div style="font-weight: 700; margin-bottom: 4px;">${task.name}</div>
+            <div style=" font-size: 12px; margin-bottom: 6px;">
+              ${task.start} → ${task.end}
+            </div>
+            <div><b>Responsable:</b> ${task.assigned}</div>
+            <div><b>Progreso:</b> ${task.progress}%</div>
+          </div>
+          `;
+        }
+      });
     }
+
+    function render(tasks) {
+      allTasks = tasks;
+      updateassignedFilter(tasks);
+      renderGantt(getFilteredTasks());
+    }
+
+    document.querySelector("#assignedFilter").addEventListener("change", () => {
+      renderGantt(getFilteredTasks());
+    });
 
     // primer render
     render({{initialTasks}});
