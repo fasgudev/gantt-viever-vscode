@@ -51,7 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
       const tasks = toFrappeTasks(parseTasksFromCsv(editor.document.getText()));
 
       if (!currentPanel) {
-        currentPanel = createOrShowGanttPanel("Gantt Preview", tasks);
+        currentPanel = createOrShowGanttPanel("Gantt Preview", tasks, context.extensionPath);
         currentPanel.onDidDispose(() => {
           currentPanel = undefined;
           currentCsvUri = undefined;
