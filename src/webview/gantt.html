@@ -36,8 +36,15 @@
         const allTasks = ref([]);
         const assignedFilter = ref('');
         const categoryFilter = ref('');
+        const statusFilter = ref('');
         const status = ref('');
         let gantt = null;
+
+        const statusOptions = [
+          { value: 'sin_iniciar', label: 'Sin iniciar' },
+          { value: 'en_progreso', label: 'En progreso' },
+          { value: 'completado', label: 'Completado' }
+        ];
 
         const assignedOptions = computed(() => {
           return [...new Set(allTasks.value.map(t => t.assigned).filter(Boolean))].sort();
@@ -51,6 +58,12 @@
           return allTasks.value.filter(t => {
             if (assignedFilter.value && t.assigned !== assignedFilter.value) return false;
             if (categoryFilter.value && t.category !== categoryFilter.value) return false;
+            if (statusFilter.value) {
+              const progress = Number(t.progress) || 0;
+              if (statusFilter.value === 'sin_iniciar' && progress !== 0) return false;
+              if (statusFilter.value === 'en_progreso' && (progress <= 0 || progress >= 100)) return false;
+              if (statusFilter.value === 'completado' && progress !== 100) return false;
+            }
             return true;
           });
         });
@@ -146,6 +159,15 @@
             }, [
               h('option', { value: '' }, 'Todas'),
               ...categoryOptions.value.map(c => h('option', { key: c, value: c }, c))
+            ]),
+            h('label', { for: 'statusFilter' }, 'Estado:'),
+            h('select', {
+              id: 'statusFilter',
+              value: statusFilter.value,
+              onChange: (e) => { statusFilter.value = e.target.value; doRenderGantt(); }
+            }, [
+              h('option', { value: '' }, 'Todos'),
+              ...statusOptions.map(s => h('option', { key: s.value, value: s.value }, s.label))
             ])
           ]),
           h('p', { class: 'muted' }, status.value),
