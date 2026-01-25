@@ -21,125 +21,129 @@
   </style>
 </head>
 <body>
-  <h2>Gantt desde CSV</h2>
-  <div class="filters">
-    <label for="assignedFilter">Responsable:</label>
-    <select id="assignedFilter">
-      <option value="">Todos</option>
-    </select>
-    <label for="categoryFilter">Categoría:</label>
-    <select id="categoryFilter">
-      <option value="">Todas</option>
-    </select>
-  </div>
-  <p class="muted" id="status"></p>
-  <div id="gantt"></div>
+  <div id="app"></div>
 
   <script nonce="{{nonce}}" src="https://unpkg.com/frappe-gantt@1.0.4/dist/frappe-gantt.umd.js"></script>
+  <script nonce="{{nonce}}" src="https://unpkg.com/vue@3/dist/vue.runtime.global.prod.js"></script>
   <script nonce="{{nonce}}">
+    const { createApp, ref, computed, onMounted, h } = Vue;
     const vscode = acquireVsCodeApi();
-    let gantt = null;
-    let allTasks = [];
 
-    function updateFilters(tasks) {
-      // Filtro de responsable
-      const assignedSelect = document.querySelector("#assignedFilter");
-      const currentAssigned = assignedSelect.value;
-      const assigneds = [...new Set(tasks.map(t => t.assigned).filter(Boolean))].sort();
+    const initialTasks = {{initialTasks}};
 
-      assignedSelect.innerHTML = '<option value="">Todos</option>';
-      assigneds.forEach(r => {
-        const option = document.createElement("option");
-        option.value = r;
-        option.textContent = r;
-        assignedSelect.appendChild(option);
-      });
+    createApp({
+      setup() {
+        const allTasks = ref([]);
+        const assignedFilter = ref('');
+        const categoryFilter = ref('');
+        const status = ref('');
+        let gantt = null;
 
-      if (assigneds.includes(currentAssigned)) {
-        assignedSelect.value = currentAssigned;
-      }
+        const assignedOptions = computed(() => {
+          return [...new Set(allTasks.value.map(t => t.assigned).filter(Boolean))].sort();
+        });
 
-      // Filtro de categoría
-      const categorySelect = document.querySelector("#categoryFilter");
-      const currentCategory = categorySelect.value;
-      const categories = [...new Set(tasks.map(t => t.category).filter(Boolean))].sort();
+        const categoryOptions = computed(() => {
+          return [...new Set(allTasks.value.map(t => t.category).filter(Boolean))].sort();
+        });
 
-      categorySelect.innerHTML = '<option value="">Todas</option>';
-      categories.forEach(c => {
-        const option = document.createElement("option");
-        option.value = c;
-        option.textContent = c;
-        categorySelect.appendChild(option);
-      });
+        const filteredTasks = computed(() => {
+          return allTasks.value.filter(t => {
+            if (assignedFilter.value && t.assigned !== assignedFilter.value) return false;
+            if (categoryFilter.value && t.category !== categoryFilter.value) return false;
+            return true;
+          });
+        });
 
-      if (categories.includes(currentCategory)) {
-        categorySelect.value = currentCategory;
-      }
-    }
+        function doRenderGantt() {
+          const el = document.querySelector("#gantt");
+          if (!el) return;
+          el.innerHTML = "";
 
-    function getFilteredTasks() {
-      const assignedFilter = document.querySelector("#assignedFilter").value;
-      const categoryFilter = document.querySelector("#categoryFilter").value;
+          const tasks = filteredTasks.value;
+          if (!tasks || tasks.length === 0) {
+            status.value = "No hay tareas validas.";
+            return;
+          }
 
-      return allTasks.filter(t => {
-        if (assignedFilter && t.assigned !== assignedFilter) return false;
-        if (categoryFilter && t.category !== categoryFilter) return false;
-        return true;
-      });
-    }
+          status.value = "Actualizado: " + new Date().toLocaleTimeString();
 
-    function renderGantt(tasks) {
-      const el = document.querySelector("#gantt");
-      el.innerHTML = "";
-      if (!tasks || tasks.length === 0) {
-        document.querySelector("#status").textContent = "No hay tareas válidas.";
-        return;
-      }
-      document.querySelector("#status").textContent = "Actualizado: " + new Date().toLocaleTimeString();
-      gantt = new Gantt("#gantt", tasks, {
-        view_mode: "Day",
-        infinite_padding: false,
-        popup: function({task}) {
-          return `
-          <div style="padding: 4px; color:#666;">
-            <div style="font-weight: 700; margin-bottom: 4px;">${task.name}</div>
-            <div style="font-size: 12px; margin-bottom: 6px;">
-              ${task.start} → ${task.end}
-            </div>
-            ${task.category ? `<div><b>Categoría:</b> ${task.category}</div>` : ''}
-            ${task.assigned ? `<div><b>Responsable:</b> ${task.assigned}</div>` : ''}
-            <div><b>Progreso:</b> ${task.progress}%</div>
-          </div>
-          `;
+          gantt = new Gantt("#gantt", tasks, {
+            view_mode: "Day",
+            infinite_padding: false,
+            popup: function({ task }) {
+              return `
+              <div style="padding: 4px; color:#666;">
+                <div style="font-weight: 700; margin-bottom: 4px;">${task.name}</div>
+                <div style="font-size: 12px; margin-bottom: 6px;">
+                  ${task.start} → ${task.end}
+                </div>
+                ${task.category ? `<div><b>Categoria:</b> ${task.category}</div>` : ''}
+                ${task.assigned ? `<div><b>Responsable:</b> ${task.assigned}</div>` : ''}
+                <div><b>Progreso:</b> ${task.progress}%</div>
+              </div>
+              `;
+            }
+          });
         }
-      });
-    }
 
-    function render(tasks) {
-      allTasks = tasks;
-      updateFilters(tasks);
-      renderGantt(getFilteredTasks());
-    }
+        function setTasks(tasks) {
+          const prevAssigned = assignedFilter.value;
+          const prevCategory = categoryFilter.value;
 
-    document.querySelector("#assignedFilter").addEventListener("change", () => {
-      renderGantt(getFilteredTasks());
-    });
+          allTasks.value = tasks;
 
-    document.querySelector("#categoryFilter").addEventListener("change", () => {
-      renderGantt(getFilteredTasks());
-    });
+          if (!assignedOptions.value.includes(prevAssigned)) {
+            assignedFilter.value = '';
+          }
+          if (!categoryOptions.value.includes(prevCategory)) {
+            categoryFilter.value = '';
+          }
 
-    // primer render
-    render({{initialTasks}});
+          doRenderGantt();
+        }
 
-    // escuchar updates desde la extensión
-    window.addEventListener("message", (event) => {
-      const msg = event.data;
-      if (msg?.type === "update") render(msg.tasks);
-      if (msg?.type === "error") {
-        document.querySelector("#status").textContent = msg.message || "Error";
+        onMounted(() => {
+          setTasks(initialTasks);
+
+          window.addEventListener("message", (event) => {
+            const msg = event.data;
+            if (msg?.type === "update") {
+              setTasks(msg.tasks);
+            }
+            if (msg?.type === "error") {
+              status.value = msg.message || "Error";
+            }
+          });
+        });
+
+        return () => h('div', [
+          h('h2', 'Gantt desde CSV'),
+          h('div', { class: 'filters' }, [
+            h('label', { for: 'assignedFilter' }, 'Responsable:'),
+            h('select', {
+              id: 'assignedFilter',
+              value: assignedFilter.value,
+              onChange: (e) => { assignedFilter.value = e.target.value; doRenderGantt(); }
+            }, [
+              h('option', { value: '' }, 'Todos'),
+              ...assignedOptions.value.map(a => h('option', { key: a, value: a }, a))
+            ]),
+            h('label', { for: 'categoryFilter' }, 'Categoria:'),
+            h('select', {
+              id: 'categoryFilter',
+              value: categoryFilter.value,
+              onChange: (e) => { categoryFilter.value = e.target.value; doRenderGantt(); }
+            }, [
+              h('option', { value: '' }, 'Todas'),
+              ...categoryOptions.value.map(c => h('option', { key: c, value: c }, c))
+            ])
+          ]),
+          h('p', { class: 'muted' }, status.value),
+          h('div', { id: 'gantt' })
+        ]);
       }
-    });
+    }).mount('#app');
   </script>
 </body>
 </html>
