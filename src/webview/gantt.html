@@ -57,6 +57,11 @@
 
         function doRenderGantt() {
           const el = document.querySelector("#gantt");
+          
+          language = "es";
+          dateFormat = "YYYY-MM-DD";
+          const options = { language, dateFormat };
+
           if (!el) return;
           el.innerHTML = "";
 
@@ -70,7 +75,11 @@
 
           gantt = new Gantt("#gantt", tasks, {
             view_mode: "Day",
+            view_mode_select: true,
+            readonly: true,
             infinite_padding: false,
+            language: options.language,
+            date_format: options.dateFormat,
             popup: function({ task }) {
               return `
               <div style="padding: 4px; color:#666;">
