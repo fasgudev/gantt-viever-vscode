@@ -6,7 +6,7 @@
     default-src 'none';
     img-src {{cspSource}} https: data:;
     style-src {{cspSource}} 'unsafe-inline' https:;
-    script-src 'nonce-{{nonce}}' https:;
+    script-src 'nonce-{{nonce}}' {{cspSource}} https:;
   " />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -23,8 +23,8 @@
 <body>
   <div id="app"></div>
 
-  <script nonce="{{nonce}}" src="https://unpkg.com/frappe-gantt@1.0.4/dist/frappe-gantt.umd.js"></script>
-  <script nonce="{{nonce}}" src="https://unpkg.com/vue@3/dist/vue.runtime.global.prod.js"></script>
+  <script nonce="{{nonce}}" src="{{frappeScript}}"></script>
+  <script nonce="{{nonce}}" src="{{vueScript}}"></script>
   <script nonce="{{nonce}}">
     const { createApp, ref, computed, onMounted, h } = Vue;
     const vscode = acquireVsCodeApi();
