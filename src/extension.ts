@@ -17,7 +17,8 @@ function toFrappeTasks(tasks: CsvTask[]) {
     end: t.end,
     progress: Number(t.progress ?? 0),
     dependencies: (t.depends ?? []).join(","),
-    assigned: t.assigned ?? ""
+    assigned: t.assigned ?? "",
+    category: t.category ?? ""
   }));
 }
 

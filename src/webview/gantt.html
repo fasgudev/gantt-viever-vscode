@@ -27,6 +27,10 @@
     <select id="assignedFilter">
       <option value="">Todos</option>
     </select>
+    <label for="categoryFilter">Categoría:</label>
+    <select id="categoryFilter">
+      <option value="">Todas</option>
+    </select>
   </div>
   <p class="muted" id="status"></p>
   <div id="gantt"></div>
@@ -37,28 +41,51 @@
     let gantt = null;
     let allTasks = [];
 
-    function updateassignedFilter(tasks) {
-      const select = document.querySelector("#assignedFilter");
-      const currentValue = select.value;
+    function updateFilters(tasks) {
+      // Filtro de responsable
+      const assignedSelect = document.querySelector("#assignedFilter");
+      const currentAssigned = assignedSelect.value;
       const assigneds = [...new Set(tasks.map(t => t.assigned).filter(Boolean))].sort();
 
-      select.innerHTML = '<option value="">Todos</option>';
+      assignedSelect.innerHTML = '<option value="">Todos</option>';
       assigneds.forEach(r => {
         const option = document.createElement("option");
         option.value = r;
         option.textContent = r;
-        select.appendChild(option);
+        assignedSelect.appendChild(option);
       });
 
-      if (assigneds.includes(currentValue)) {
-        select.value = currentValue;
+      if (assigneds.includes(currentAssigned)) {
+        assignedSelect.value = currentAssigned;
+      }
+
+      // Filtro de categoría
+      const categorySelect = document.querySelector("#categoryFilter");
+      const currentCategory = categorySelect.value;
+      const categories = [...new Set(tasks.map(t => t.category).filter(Boolean))].sort();
+
+      categorySelect.innerHTML = '<option value="">Todas</option>';
+      categories.forEach(c => {
+        const option = document.createElement("option");
+        option.value = c;
+        option.textContent = c;
+        categorySelect.appendChild(option);
+      });
+
+      if (categories.includes(currentCategory)) {
+        categorySelect.value = currentCategory;
       }
     }
 
     function getFilteredTasks() {
-      const filter = document.querySelector("#assignedFilter").value;
-      if (!filter) return allTasks;
-      return allTasks.filter(t => t.assigned === filter);
+      const assignedFilter = document.querySelector("#assignedFilter").value;
+      const categoryFilter = document.querySelector("#categoryFilter").value;
+
+      return allTasks.filter(t => {
+        if (assignedFilter && t.assigned !== assignedFilter) return false;
+        if (categoryFilter && t.category !== categoryFilter) return false;
+        return true;
+      });
     }
 
     function renderGantt(tasks) {
@@ -73,16 +100,14 @@
         view_mode: "Day",
         infinite_padding: false,
         popup: function({task}) {
-          console.log("task", task);
-          const assigned = task.assigned ? `<p><strong>Responsable:</strong> ${task.assigned}</p>` : '';
-          console.log("assigned", assigned);
           return `
           <div style="padding: 4px; color:#666;">
             <div style="font-weight: 700; margin-bottom: 4px;">${task.name}</div>
-            <div style=" font-size: 12px; margin-bottom: 6px;">
+            <div style="font-size: 12px; margin-bottom: 6px;">
               ${task.start} → ${task.end}
             </div>
-            <div><b>Responsable:</b> ${task.assigned}</div>
+            ${task.category ? `<div><b>Categoría:</b> ${task.category}</div>` : ''}
+            ${task.assigned ? `<div><b>Responsable:</b> ${task.assigned}</div>` : ''}
             <div><b>Progreso:</b> ${task.progress}%</div>
           </div>
           `;
@@ -92,11 +117,15 @@
 
     function render(tasks) {
       allTasks = tasks;
-      updateassignedFilter(tasks);
+      updateFilters(tasks);
       renderGantt(getFilteredTasks());
     }
 
     document.querySelector("#assignedFilter").addEventListener("change", () => {
+      renderGantt(getFilteredTasks());
+    });
+
+    document.querySelector("#categoryFilter").addEventListener("change", () => {
       renderGantt(getFilteredTasks());
     });
 
