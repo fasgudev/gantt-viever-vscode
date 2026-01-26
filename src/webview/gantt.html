@@ -18,6 +18,8 @@
     .filters { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
     .filters label { font-weight: 500; }
     .filters select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; }
+    .errors { color: #dc3545; font-size: 13px; margin-bottom: 10px; }
+    .errors div { margin-bottom: 4px; }
   </style>
 </head>
 <body>
@@ -30,10 +32,12 @@
     const vscode = acquireVsCodeApi();
 
     const initialTasks = {{initialTasks}};
+    const initialErrors = {{initialErrors}};
 
     createApp({
       setup() {
         const allTasks = ref([]);
+        const errors = ref([]);
         const assignedFilter = ref('');
         const categoryFilter = ref('');
         const statusFilter = ref('');
@@ -109,11 +113,12 @@
           });
         }
 
-        function setTasks(tasks) {
+        function setTasks(tasks, newErrors = []) {
           const prevAssigned = assignedFilter.value;
           const prevCategory = categoryFilter.value;
 
           allTasks.value = tasks;
+          errors.value = newErrors;
 
           if (!assignedOptions.value.includes(prevAssigned)) {
             assignedFilter.value = '';
@@ -126,15 +131,12 @@
         }
 
         onMounted(() => {
-          setTasks(initialTasks);
+          setTasks(initialTasks, initialErrors);
 
           window.addEventListener("message", (event) => {
             const msg = event.data;
             if (msg?.type === "update") {
-              setTasks(msg.tasks);
-            }
-            if (msg?.type === "error") {
-              status.value = msg.message || "Error";
+              setTasks(msg.tasks, msg.errors || []);
             }
           });
         });
@@ -170,7 +172,10 @@
               ...statusOptions.map(s => h('option', { key: s.value, value: s.value }, s.label))
             ])
           ]),
-          h('p', { class: 'muted' }, status.value),
+          // h('p', { class: 'muted' }, status.value),
+          errors.value.length > 0 ? h('div', { class: 'errors', style: { borderTop: '1px solid #FFF', paddingTop: '6px'} },
+            errors.value.map(err => h('div', { key: err }, ['⚠️ ', err]))
+          ) : null,
           h('div', { id: 'gantt' })
         ]);
       }

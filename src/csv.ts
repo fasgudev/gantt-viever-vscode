@@ -9,26 +9,50 @@ export type CsvTask = {
   depends?: string[];
 };
 
-export function parseTasksFromCsv(csv: string): CsvTask[] {
+export type ParseResult = {
+  tasks: CsvTask[];
+  errors: string[];
+};
+
+export function parseTasksFromCsv(csv: string): ParseResult {
   const lines = csv.split(/\r?\n/).filter(Boolean);
-  if (lines.length < 2) return [];
+  if (lines.length < 2) return { tasks: [], errors: [] };
 
   const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
-
   const index = (name: string) => headers.indexOf(name);
 
-  return lines.slice(1).map(line => {
-    const cols = line.split(",").map(c => c.trim());
+  const tasks: CsvTask[] = [];
+  const errors: string[] = [];
 
-    return {
-      id: cols[index("id")],
-      name: cols[index("name")],
-      start: cols[index("start")],
-      end: cols[index("end")],
+  lines.slice(1).forEach((line, lineIndex) => {
+    const cols = line.split(",").map(c => c.trim());
+    const rowNum = lineIndex + 2; // +2 because header is line 1
+
+    const id = cols[index("id")];
+    const name = cols[index("name")];
+    const start = cols[index("start")];
+    const end = cols[index("end")];
+
+    if (!id || !name) return;
+    if (!start || !end) return;
+
+    // Validate: start should not be greater than end
+    if (new Date(start) > new Date(end)) {
+      errors.push(`Fila ${rowNum}: tiene fecha inicio mayor a fecha fin`);
+      return;
+    }
+
+    tasks.push({
+      id,
+      name,
+      start,
+      end,
       progress: Number(cols[index("progress")] ?? 0),
       assigned: cols[index("assigned")] ?? "",
       category: cols[index("category")] ?? "",
       depends: (cols[index("depends")] ?? "").split("|").filter(Boolean)
-    };
-  }).filter(t => t.id && t.name);
+    });
+  });
+
+  return { tasks, errors };
 }
