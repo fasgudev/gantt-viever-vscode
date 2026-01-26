@@ -3,8 +3,13 @@
   "displayName": "GanttViewer",
   "description": "",
   "version": "0.0.1",
+  "publisher": "fasgudev",
   "engines": {
     "vscode": "^1.108.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "hhttps://github.com/fasgudev/gantt-viever.git"
   },
   "categories": [
     "Other"
@@ -35,7 +40,13 @@
         "ganttviewer.dateFormat": {
           "type": "string",
           "default": "YYYY-MM-DD",
-          "enum": ["YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY", "DD/MM/YYYY", "MM/DD/YYYY"],
+          "enum": [
+            "YYYY-MM-DD",
+            "DD-MM-YYYY",
+            "MM-DD-YYYY",
+            "DD/MM/YYYY",
+            "MM/DD/YYYY"
+          ],
           "enumDescriptions": [
             "Año-Mes-Día (2024-01-31)",
             "Día-Mes-Año (31-01-2024)",
@@ -48,7 +59,10 @@
         "ganttviewer.delimiter": {
           "type": "string",
           "default": ",",
-          "enum": [",", ";"],
+          "enum": [
+            ",",
+            ";"
+          ],
           "enumDescriptions": [
             "Coma (,)",
             "Punto y coma (;)"
