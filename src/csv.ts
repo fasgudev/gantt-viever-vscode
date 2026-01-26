@@ -24,6 +24,21 @@ export function parseTasksFromCsv(csv: string): ParseResult {
   const tasks: CsvTask[] = [];
   const errors: string[] = [];
 
+  // Validate required columns
+  const requiredColumns = ["id", "name", "start", "end"];
+  const missingRequired = requiredColumns.filter(col => index(col) === -1);
+  if (missingRequired.length > 0) {
+    errors.push(`Columnas requeridas faltantes: ${missingRequired.join(", ")}`);
+    return { tasks: [], errors };
+  }
+
+  // Warn about optional columns
+  // const optionalColumns = ["progress", "assigned", "category"];
+  // const missingOptional = optionalColumns.filter(col => index(col) === -1);
+  // if (missingOptional.length > 0) {
+  //   errors.push(`Columnas opcionales faltantes: ${missingOptional.join(", ")}`);
+  // }
+
   lines.slice(1).forEach((line, lineIndex) => {
     const cols = line.split(",").map(c => c.trim());
     const rowNum = lineIndex + 2; // +2 because header is line 1
