@@ -44,6 +44,16 @@
             "Mes/Día/Año (01/31/2024)"
           ],
           "description": "Formato de fecha para el CSV"
+        },
+        "ganttviewer.delimiter": {
+          "type": "string",
+          "default": ",",
+          "enum": [",", ";"],
+          "enumDescriptions": [
+            "Coma (,)",
+            "Punto y coma (;)"
+          ],
+          "description": "Delimitador de columnas del CSV"
         }
       }
     }
