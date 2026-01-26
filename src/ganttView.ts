@@ -20,18 +20,25 @@ function getWebviewHtml(
   const templatePath = path.join(extensionPath, "src", "webview", "gantt.html");
   let html = fs.readFileSync(templatePath, "utf-8");
 
+  // Load local assets
   const frappePath = vscode.Uri.file(path.join(extensionPath, "assets", "js", "frappe-gantt.umd.js"));
   const vuePath = vscode.Uri.file(path.join(extensionPath, "assets", "js", "vue.runtime.global.prod.js"));
-  const frappeScript = webview.asWebviewUri(frappePath).toString();
-  const vueScript = webview.asWebviewUri(vuePath).toString();
+  
+  let frappeScript = "";
+  let vueScript = "";
+  
+  try {
+    frappeScript = webview.asWebviewUri(frappePath)?.toString() || "";
+    vueScript = webview.asWebviewUri(vuePath)?.toString() || "";
+  } catch (e) {
+    console.error("Error loading assets:", e);
+  }
 
   html = html
     .replace(/\{\{cspSource\}\}/g, cspSource)
     .replace(/\{\{nonce\}\}/g, n)
     .replace(/\{\{initialTasks\}\}/g, JSON.stringify(initialTasks))
-    .replace(/\{\{initialErrors\}\}/g, JSON.stringify(initialErrors));
-
-  html = html
+    .replace(/\{\{initialErrors\}\}/g, JSON.stringify(initialErrors))
     .replace(/\{\{frappeScript\}\}/g, frappeScript)
     .replace(/\{\{vueScript\}\}/g, vueScript);
 
