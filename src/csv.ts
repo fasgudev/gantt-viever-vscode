@@ -14,7 +14,51 @@ export type ParseResult = {
   errors: string[];
 };
 
-export function parseTasksFromCsv(csv: string): ParseResult {
+export type DateFormat = "YYYY-MM-DD" | "DD-MM-YYYY" | "MM-DD-YYYY" | "DD/MM/YYYY" | "MM/DD/YYYY";
+
+const DATE_FORMAT_PATTERNS: Record<DateFormat, { regex: RegExp; parse: (match: RegExpMatchArray) => { year: number; month: number; day: number } }> = {
+  "YYYY-MM-DD": {
+    regex: /^(\d{4})-(\d{2})-(\d{2})$/,
+    parse: (m) => ({ year: +m[1], month: +m[2], day: +m[3] })
+  },
+  "DD-MM-YYYY": {
+    regex: /^(\d{2})-(\d{2})-(\d{4})$/,
+    parse: (m) => ({ year: +m[3], month: +m[2], day: +m[1] })
+  },
+  "MM-DD-YYYY": {
+    regex: /^(\d{2})-(\d{2})-(\d{4})$/,
+    parse: (m) => ({ year: +m[3], month: +m[1], day: +m[2] })
+  },
+  "DD/MM/YYYY": {
+    regex: /^(\d{2})\/(\d{2})\/(\d{4})$/,
+    parse: (m) => ({ year: +m[3], month: +m[2], day: +m[1] })
+  },
+  "MM/DD/YYYY": {
+    regex: /^(\d{2})\/(\d{2})\/(\d{4})$/,
+    parse: (m) => ({ year: +m[3], month: +m[1], day: +m[2] })
+  }
+};
+
+function isValidDate(date: string, format: DateFormat): boolean {
+  const pattern = DATE_FORMAT_PATTERNS[format];
+  if (!pattern) return false;
+
+  const match = date.match(pattern.regex);
+  if (!match) return false;
+
+  const { year, month, day } = pattern.parse(match);
+
+  // Check if date is valid
+  const parsed = new Date(year, month - 1, day);
+  if (isNaN(parsed.getTime())) return false;
+
+  // Verify the date wasn't adjusted (e.g., 2024-02-30 -> 2024-03-01)
+  return parsed.getFullYear() === year &&
+         parsed.getMonth() === month - 1 &&
+         parsed.getDate() === day;
+}
+
+export function parseTasksFromCsv(csv: string, dateFormat: DateFormat = "YYYY-MM-DD"): ParseResult {
   const lines = csv.split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) return { tasks: [], errors: [] };
 
@@ -48,12 +92,31 @@ export function parseTasksFromCsv(csv: string): ParseResult {
     const start = cols[index("start")];
     const end = cols[index("end")];
 
-    if (!id || !name) return;
-    if (!start || !end) return;
+    // Validate required fields are not empty
+    const emptyFields: string[] = [];
+    if (!id) emptyFields.push("id");
+    if (!name) emptyFields.push("name");
+    if (!start) emptyFields.push("start");
+    if (!end) emptyFields.push("end");
+
+    if (emptyFields.length > 0) {
+      errors.push(`Fila ${rowNum}: campos vacíos (${emptyFields.join(", ")})`);
+      return;
+    }
+
+    // Validate date format
+    if (!isValidDate(start, dateFormat)) {
+      errors.push(`Fila ${rowNum}: fecha inicio "${start}" no tiene formato ${dateFormat}`);
+      return;
+    }
+    if (!isValidDate(end, dateFormat)) {
+      errors.push(`Fila ${rowNum}: fecha fin "${end}" no tiene formato ${dateFormat}`);
+      return;
+    }
 
     // Validate: start should not be greater than end
     if (new Date(start) > new Date(end)) {
-      errors.push(`Fila ${rowNum}: tiene fecha inicio mayor a fecha fin`);
+      errors.push(`Fila ${rowNum}: fecha inicio (${start}) mayor a fecha fin (${end})`);
       return;
     }
 
