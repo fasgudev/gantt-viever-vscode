@@ -14,6 +14,7 @@ function getWebviewHtml(
   cspSource: string,
   n: string,
   initialTasks: any[],
+  initialErrors: string[],
   webview: vscode.Webview
 ): string {
   const templatePath = path.join(extensionPath, "src", "webview", "gantt.html");
@@ -27,7 +28,8 @@ function getWebviewHtml(
   html = html
     .replace(/\{\{cspSource\}\}/g, cspSource)
     .replace(/\{\{nonce\}\}/g, n)
-    .replace(/\{\{initialTasks\}\}/g, JSON.stringify(initialTasks));
+    .replace(/\{\{initialTasks\}\}/g, JSON.stringify(initialTasks))
+    .replace(/\{\{initialErrors\}\}/g, JSON.stringify(initialErrors));
 
   html = html
     .replace(/\{\{frappeScript\}\}/g, frappeScript)
@@ -39,6 +41,7 @@ function getWebviewHtml(
 export function createOrShowGanttPanel(
   title: string,
   initialTasks: any[],
+  initialErrors: string[],
   extensionPath: string
 ): vscode.WebviewPanel {
   const panel = vscode.window.createWebviewPanel(
@@ -55,6 +58,7 @@ export function createOrShowGanttPanel(
     panel.webview.cspSource,
     n,
     initialTasks,
+    initialErrors,
     panel.webview
   );
 

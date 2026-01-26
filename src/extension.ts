@@ -25,16 +25,15 @@ function toFrappeTasks(tasks: CsvTask[]) {
 function updatePanelFromDocument(doc: vscode.TextDocument) {
   if (!currentPanel) return;
 
-  const tasks = parseTasksFromCsv(doc.getText());
+  const { tasks, errors } = parseTasksFromCsv(doc.getText());
   const frappeTasks = toFrappeTasks(tasks);
 
   if (!frappeTasks.length) {
-    currentPanel.webview.postMessage({ type: "error", message: "No se encontraron tareas válidas en el CSV." });
-    currentPanel.webview.postMessage({ type: "update", tasks: [] });
+    currentPanel.webview.postMessage({ type: "update", tasks: [], errors: ["No se encontraron tareas válidas en el CSV."] });
     return;
   }
 
-  currentPanel.webview.postMessage({ type: "update", tasks: frappeTasks });
+  currentPanel.webview.postMessage({ type: "update", tasks: frappeTasks, errors });
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -50,10 +49,11 @@ export function activate(context: vscode.ExtensionContext) {
 
       currentCsvUri = editor.document.uri;
 
-      const tasks = toFrappeTasks(parseTasksFromCsv(editor.document.getText()));
+      const { tasks, errors } = parseTasksFromCsv(editor.document.getText());
+      const frappeTasks = toFrappeTasks(tasks);
 
       if (!currentPanel) {
-        currentPanel = createOrShowGanttPanel("Gantt Preview", tasks, context.extensionPath);
+        currentPanel = createOrShowGanttPanel("Gantt Preview", frappeTasks, errors, context.extensionPath);
         currentPanel.onDidDispose(() => {
           currentPanel = undefined;
           currentCsvUri = undefined;
@@ -61,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
       } else {
         currentPanel.title = "Gantt Preview";
         currentPanel.reveal(vscode.ViewColumn.One);
-        currentPanel.webview.postMessage({ type: "update", tasks });
+        currentPanel.webview.postMessage({ type: "update", tasks: frappeTasks, errors });
       }
     })
   );
