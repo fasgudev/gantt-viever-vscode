@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { parseTasksFromCsv, CsvTask } from "./csv";
+import { parseTasksFromCsv, CsvTask, DateFormat } from "./csv";
 import { createOrShowGanttPanel } from "./ganttView";
 
 let currentPanel: vscode.WebviewPanel | undefined;
@@ -7,6 +7,11 @@ let currentCsvUri: vscode.Uri | undefined;
 
 function isCsvDoc(doc: vscode.TextDocument) {
   return doc.fileName.toLowerCase().endsWith(".csv");
+}
+
+function getDateFormat(): DateFormat {
+  const config = vscode.workspace.getConfiguration("ganttviewer");
+  return config.get<DateFormat>("dateFormat") ?? "YYYY-MM-DD";
 }
 
 function toFrappeTasks(tasks: CsvTask[]) {
@@ -25,7 +30,7 @@ function toFrappeTasks(tasks: CsvTask[]) {
 function updatePanelFromDocument(doc: vscode.TextDocument) {
   if (!currentPanel) return;
 
-  const { tasks, errors } = parseTasksFromCsv(doc.getText());
+  const { tasks, errors } = parseTasksFromCsv(doc.getText(), getDateFormat());
   const frappeTasks = toFrappeTasks(tasks);
 
   if (!frappeTasks.length) {
@@ -49,7 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
 
       currentCsvUri = editor.document.uri;
 
-      const { tasks, errors } = parseTasksFromCsv(editor.document.getText());
+      const { tasks, errors } = parseTasksFromCsv(editor.document.getText(), getDateFormat());
       const frappeTasks = toFrappeTasks(tasks);
 
       if (!currentPanel) {
