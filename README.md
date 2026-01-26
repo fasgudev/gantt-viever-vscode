@@ -1,71 +1,104 @@
-# ganttviewer README
+# Gantt Viewer
 
-This is the README for your extension "ganttviewer". After writing up a brief description, we recommend including the following sections.
+Extensión de VSCode para visualizar diagramas de Gantt desde archivos CSV.
 
-## Features
+## Características
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Visualiza diagramas de Gantt desde archivos CSV
+- Filtros por responsable, categoría y estado (sin iniciar, en progreso, completado)
+- Actualización automática al guardar el CSV
+- Validación de datos con mensajes de error descriptivos
 
-For example if there is an image subfolder under your extension project workspace:
+## Uso
 
-\!\[feature X\]\(images/feature-x.png\)
+1. Abre un archivo `.csv` con el formato requerido
+2. Haz clic en el botón "Gantt: Preview from CSV" en la barra de título del editor
+3. El diagrama de Gantt se mostrará en un panel lateral
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Formato del CSV
 
-## Requirements
+El archivo CSV debe tener las siguientes columnas:
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+| Columna | Requerida | Descripción |
+|---------|-----------|-------------|
+| id | Sí | Identificador único de la tarea |
+| name | Sí | Nombre de la tarea |
+| start | Sí | Fecha de inicio (formato configurable) |
+| end | Sí | Fecha de fin (formato configurable) |
+| progress | No | Porcentaje de progreso (0-100) |
+| assigned | No | Responsable de la tarea |
+| category | No | Categoría de la tarea |
+| depends | No | Dependencias (IDs separados por `\|`) |
 
-## Extension Settings
+### Ejemplo de CSV
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+```csv
+id,name,start,end,progress,assigned,category,depends
+1,Diseño,2024-01-01,2024-01-15,100,Juan,Diseño,
+2,Desarrollo,2024-01-10,2024-02-15,50,María,Desarrollo,1
+3,Testing,2024-02-01,2024-02-28,0,Pedro,QA,2
+```
 
-For example:
+## Configuración
 
-This extension contributes the following settings:
+Esta extensión contribuye las siguientes configuraciones:
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+### `ganttviewer.dateFormat`
 
-## Known Issues
+Formato de fecha para el CSV.
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+| Valor | Ejemplo | Descripción |
+|-------|---------|-------------|
+| `YYYY-MM-DD` | 2024-01-31 | Año-Mes-Día (por defecto) |
+| `DD-MM-YYYY` | 31-01-2024 | Día-Mes-Año |
+| `MM-DD-YYYY` | 01-31-2024 | Mes-Día-Año |
+| `DD/MM/YYYY` | 31/01/2024 | Día/Mes/Año |
+| `MM/DD/YYYY` | 01/31/2024 | Mes/Día/Año |
 
-## Release Notes
+### `ganttviewer.delimiter`
 
-Users appreciate release notes as you update your extension.
+Delimitador de columnas del CSV.
 
-### 1.0.0
+| Valor | Descripción |
+|-------|-------------|
+| `,` | Coma (por defecto) |
+| `;` | Punto y coma |
 
-Initial release of ...
+### Ejemplo de configuración
 
-### 1.0.1
+En tu `settings.json`:
 
-Fixed issue #.
+```json
+{
+  "ganttviewer.dateFormat": "DD/MM/YYYY",
+  "ganttviewer.delimiter": ";"
+}
+```
 
-### 1.1.0
+## Validaciones
 
-Added features X, Y, and Z.
+La extensión valida automáticamente:
 
----
+- Columnas requeridas presentes (id, name, start, end)
+- Formato de fecha correcto según configuración
+- Fecha de inicio no mayor a fecha de fin
+- Campos requeridos no vacíos
+- Delimitador correcto (sugiere cambio si detecta otro)
 
-## Following extension guidelines
+## Requisitos
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+- VSCode 1.108.0 o superior
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+## Problemas conocidos
 
-## Working with Markdown
+Ninguno por el momento.
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+## Notas de versión
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+### 0.0.1
 
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+- Versión inicial
+- Visualización de Gantt desde CSV
+- Filtros por responsable, categoría y estado
+- Configuración de formato de fecha y delimitador
+- Validación de datos con mensajes de error
