@@ -15,6 +15,7 @@ export type ParseResult = {
 };
 
 export type DateFormat = "YYYY-MM-DD" | "DD-MM-YYYY" | "MM-DD-YYYY" | "DD/MM/YYYY" | "MM/DD/YYYY";
+export type Delimiter = "," | ";";
 
 const DATE_FORMAT_PATTERNS: Record<DateFormat, { regex: RegExp; parse: (match: RegExpMatchArray) => { year: number; month: number; day: number } }> = {
   "YYYY-MM-DD": {
@@ -58,21 +59,42 @@ function isValidDate(date: string, format: DateFormat): boolean {
          parsed.getDate() === day;
 }
 
-export function parseTasksFromCsv(csv: string, dateFormat: DateFormat = "YYYY-MM-DD"): ParseResult {
+export function parseTasksFromCsv(
+  csv: string,
+  dateFormat: DateFormat = "YYYY-MM-DD",
+  delimiter: Delimiter = ","
+): ParseResult {
   const lines = csv.split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) return { tasks: [], errors: [] };
 
-  const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+  const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase());
   const index = (name: string) => headers.indexOf(name);
 
   const tasks: CsvTask[] = [];
   const errors: string[] = [];
 
+  // Validate delimiter - check if wrong delimiter might be used
+  const otherDelimiter: Delimiter = delimiter === "," ? ";" : ",";
+  const headersWithOther = lines[0].split(otherDelimiter).map(h => h.trim().toLowerCase());
+
+  if (headers.length === 1 && headersWithOther.length > 1) {
+    errors.push(`Delimitador incorrecto: el archivo parece usar "${otherDelimiter}" en lugar de "${delimiter}"`);
+    return { tasks: [], errors };
+  }
+
   // Validate required columns
   const requiredColumns = ["id", "name", "start", "end"];
   const missingRequired = requiredColumns.filter(col => index(col) === -1);
   if (missingRequired.length > 0) {
-    errors.push(`Columnas requeridas faltantes: ${missingRequired.join(", ")}`);
+    // Check if columns exist with other delimiter
+    const indexOther = (name: string) => headersWithOther.indexOf(name);
+    const missingWithOther = requiredColumns.filter(col => indexOther(col) === -1);
+
+    if (missingWithOther.length < missingRequired.length) {
+      errors.push(`Delimitador incorrecto: el archivo parece usar "${otherDelimiter}" en lugar de "${delimiter}"`);
+    } else {
+      errors.push(`Columnas requeridas faltantes: ${missingRequired.join(", ")}`);
+    }
     return { tasks: [], errors };
   }
 
@@ -84,7 +106,7 @@ export function parseTasksFromCsv(csv: string, dateFormat: DateFormat = "YYYY-MM
   // }
 
   lines.slice(1).forEach((line, lineIndex) => {
-    const cols = line.split(",").map(c => c.trim());
+    const cols = line.split(delimiter).map(c => c.trim());
     const rowNum = lineIndex + 2; // +2 because header is line 1
 
     const id = cols[index("id")];
