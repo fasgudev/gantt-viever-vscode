@@ -2,6 +2,8 @@
 
 Extensión de VSCode para visualizar diagramas de Gantt desde archivos CSV.
 
+![Demo](assets/demo.png)
+
 ## Características
 
 - Visualiza diagramas de Gantt desde archivos CSV
@@ -34,9 +36,9 @@ El archivo CSV debe tener las siguientes columnas:
 
 ```csv
 id,name,start,end,progress,assigned,category,depends
-1,Diseño,2024-01-01,2024-01-15,100,Juan,Diseño,
-2,Desarrollo,2024-01-10,2024-02-15,50,María,Desarrollo,1
-3,Testing,2024-02-01,2024-02-28,0,Pedro,QA,2
+1,Diseño,2026-01-25,2026-01-28,100,Juan,Diseño,
+2,Desarrollo,2026-01-28,2026-01-31,50,María,Desarrollo,1
+3,Testing,2026-02-01,2026-02-08,0,Pedro,QA,2
 ```
 
 ## Configuración
@@ -49,11 +51,11 @@ Formato de fecha para el CSV.
 
 | Valor | Ejemplo | Descripción |
 |-------|---------|-------------|
-| `YYYY-MM-DD` | 2024-01-31 | Año-Mes-Día (por defecto) |
-| `DD-MM-YYYY` | 31-01-2024 | Día-Mes-Año |
-| `MM-DD-YYYY` | 01-31-2024 | Mes-Día-Año |
-| `DD/MM/YYYY` | 31/01/2024 | Día/Mes/Año |
-| `MM/DD/YYYY` | 01/31/2024 | Mes/Día/Año |
+| `YYYY-MM-DD` | 2025-01-31 | Año-Mes-Día (por defecto) |
+| `DD-MM-YYYY` | 31-01-2025 | Día-Mes-Año |
+| `MM-DD-YYYY` | 01-31-2025 | Mes-Día-Año |
+| `DD/MM/YYYY` | 31/01/2025 | Día/Mes/Año |
+| `MM/DD/YYYY` | 01/31/2025 | Mes/Día/Año |
 
 ### `ganttviewer.delimiter`
 
