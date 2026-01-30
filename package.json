@@ -2,14 +2,14 @@
   "name": "ganttviewer",
   "displayName": "GanttViewer",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "fasgudev",
   "engines": {
     "vscode": "^1.108.0"
   },
   "repository": {
     "type": "git",
-    "url": "hhttps://github.com/fasgudev/gantt-viever.git"
+    "url": "https://github.com/fasgudev/gantt-viever-vscode.git"
   },
   "categories": [
     "Other"
